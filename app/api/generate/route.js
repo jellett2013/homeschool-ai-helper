@@ -14,18 +14,16 @@ export async function POST(req) {
 You are a homeschool curriculum advisor.
 
 Recommend exactly 3 curriculum options for a ${gradeLevel} student.
-${learningStyle ? `Learning style: ${learningStyle}` : ''}
-${subject ? `Subject: ${subject}` : 'Include a mix of subjects.'}
-${alignToState && state ? `Align with homeschool education guidelines in ${state}.` : ''}
+${learningStyle ? `Preferred learning style: ${learningStyle}.` : ''}
+${subject ? `Focus on subject: ${subject}.` : ''}
+${alignToState && state ? `Recommendations must align with homeschool guidelines in ${state}.` : ''}
 
-⚠️ Return only 3 lines, and each line must use this exact pipe-separated format:
-
+⚠️ Format:
+Each curriculum must be on its own line, using this format:
 Name | Subject | Description | Link | Tags | Cost | Justification
 
-- Do NOT include any extra commentary or markdown
-- Do NOT include bullet points or numbering
-- Tags = comma-separated (e.g. Religious,Digital)
-- Cost = specific estimate or range (e.g. $80–$120/yr)
+⚠️ No bullet points. No markdown. No commentary.
+Only 3 lines. Only use "|" to separate each field.
 `;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -43,7 +41,9 @@ Name | Subject | Description | Link | Tags | Cost | Justification
 
   const data = await response.json();
 
-  return NextResponse.json({
-    result: data?.choices?.[0]?.message?.content || '',
-  });
+  const result = data?.choices?.[0]?.message?.content || '';
+
+  console.log('🧠 OpenAI Raw Response:\n', result);
+
+  return NextResponse.json({ result });
 }

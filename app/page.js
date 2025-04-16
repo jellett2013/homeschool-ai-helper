@@ -25,21 +25,39 @@ const tagColors = {
 };
 
 const parseGPT = (txt) => {
-  const lines = txt.split('\n').filter((l)=>l.includes('|'));
-  if(!lines.length) return null;
-  return lines.map(l=>{
-    const [name, subj, desc, link, tags='', cost='', justif=''] = l.split('|').map(s=>s.trim());
-    return {
-      name,
-      subject:subj,
-      description:desc,
-      link: link ? ensureURL(link) : '',
-      tags: tags.split(',').map(t=>t.trim()),
-      cost,
-      justification:justif,
-    };
-  });
+  const lines = txt
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && l.includes('|') && l.split('|').length >= 4);
+
+  if (!lines.length) return null;
+
+  const results = [];
+
+  for (const line of lines) {
+    try {
+      const [name, subject, description, link, tags = '', cost = '', justification = ''] = line
+        .split('|')
+        .map((s) => s.trim());
+
+      results.push({
+        name,
+        subject,
+        description,
+        link: /^https?:\/\//i.test(link) ? link : `https://${link}`,
+        tags: tags.split(',').map((t) => t.trim()),
+        cost,
+        justification,
+      });
+    } catch (err) {
+      console.warn('❌ Skipping malformed line:', line);
+    }
+  }
+
+  // Fallback: if nothing could be parsed, return null
+  return results.length ? results : null;
 };
+
 
 const Spinner=()=> <div className="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"/>;
 
