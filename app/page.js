@@ -165,7 +165,8 @@ const Sidebar = memo(({ plan, togglePurchased, removeItem, exportPdf, planRef, m
 /* ---------- Main ---------- */
 export default function Home() {
   /* form */
-  const [grade,setGrade]=useState('');
+  const [rawAI, setRawAI] = useState('');
+const [grade,setGrade]=useState('');
   const [style,setStyle]=useState('');
   const [subject,setSubj]=useState('');
   const [stateSel,setStateSel]=useState('');
@@ -218,10 +219,11 @@ export default function Home() {
     setSubmitted(true);
     setError('');
     setLoading(true);
-
+    setRawAI(''); // reset previous output
+  
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 30000);
-
+  
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -235,16 +237,25 @@ export default function Home() {
           alignToState: align,
         }),
       });
+  
       clearTimeout(timer);
+  
       const { result } = await res.json();
+      setRawAI(result); // 🧠 show raw GPT output
+  
       const parsed = parseGPT(result);
-      parsed ? setRecs(parsed) : setError('⚠ Unexpected AI format—retry.');
+      if (parsed) {
+        setRecs(parsed);
+      } else {
+        setError('⚠ Unexpected AI format—retry.');
+      }
     } catch {
-      setError('❌ Timed out—try again.');
+      setError('❌ Timed out—try again.');
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <main className="min-h-screen p-6 bg-gradient-to-br from-blue-50 via-white to-pink-50 flex justify-center">
