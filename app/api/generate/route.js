@@ -11,21 +11,24 @@ export async function POST(req) {
   } = await req.json();
 
   const prompt = `
-You are an expert homeschool‑curriculum advisor.
+You are a homeschool curriculum advisor.
 
-Suggest **exactly 3** curriculum options for a ${gradeLevel} child who prefers a “${learningStyle}” learning style.
-${subject ? `Focus on “${subject}.”` : 'Include a variety of subjects.'}
-${alignToState && state ? `Align with homeschool guidelines in ${state}.` : ''}
+Recommend exactly 3 curriculum options for a ${gradeLevel} student.
+${learningStyle ? `Learning style: ${learningStyle}` : ''}
+${subject ? `Subject: ${subject}` : 'Include a mix of subjects.'}
+${alignToState && state ? `Align with homeschool education guidelines in ${state}.` : ''}
 
-Return **one line per option** in this pipe‑separated format:
-Name | Subject | Short Description | Website URL | Tags | Cost | Justification
+⚠️ Return only 3 lines, and each line must use this exact pipe-separated format:
 
-• **Tags** = comma list (Religious/Secular, Digital/Physical/Both, etc.)  
-• **Cost** = **actual USD figure or range**, e.g. “$49”, “$80‑$120 / yr”, “$249 one‑time”.  
-• **Justification** = 30‑50 words on educational value & reimbursement appeal.
+Name | Subject | Description | Link | Tags | Cost | Justification
+
+- Do NOT include any extra commentary or markdown
+- Do NOT include bullet points or numbering
+- Tags = comma-separated (e.g. Religious,Digital)
+- Cost = specific estimate or range (e.g. $80–$120/yr)
 `;
 
-  const openAI = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -33,12 +36,13 @@ Name | Subject | Short Description | Website URL | Tags | Cost | Justification
     },
     body: JSON.stringify({
       model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
+      messages: [{ role: 'user', content: prompt }],
     }),
   });
 
-  const data = await openAI.json();
+  const data = await response.json();
+
   return NextResponse.json({
     result: data?.choices?.[0]?.message?.content || '',
   });
