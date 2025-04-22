@@ -1,0 +1,51 @@
+{
+    "Texas": {
+      "requiredSubjects": [
+        "Math",
+        "Reading",
+        "Spelling",
+        "Grammar",
+        "Good Citizenship"
+      ]
+    },
+    "California": {
+      "requiredSubjects": [
+        "English",
+        "Math",
+        "Science",
+        "Social Studies",
+        "Fine Arts"
+      ]
+    },
+    "Florida": {
+      "requiredSubjects": [
+        "Language Arts",
+        "Math",
+        "Science",
+        "Social Studies",
+        "Health"
+      ]
+    },
+    "New York": {
+      "requiredSubjects": [
+        "English",
+        "Math",
+        "Science",
+        "Geography",
+        "US History",
+        "Health",
+        "Physical Education"
+      ]
+    },
+    "Utah": {
+      "requiredSubjects": [
+        "Reading",
+        "Writing",
+        "Math",
+        "Science",
+        "Civics",
+        "Health",
+        "Safety"
+      ]
+    }
+  }

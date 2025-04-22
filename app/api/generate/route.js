@@ -18,20 +18,25 @@ export async function POST(req) {
       ? exclude.map((e) => e.trim()).filter(Boolean).slice(0, 20)
       : [];
 
-    // ✨ Construct prompt parts cleanly
-    const promptParts = [
-      `You are a homeschool curriculum advisor.`,
-      `Recommend exactly 3 curriculum options for a ${gradeLevel} student.`,
-      learningStyle && `Preferred learning style: ${learningStyle}.`,
-      subject && `Focus on subject: ${subject}.`,
-      alignToState && state && `Recommendations must align with homeschool guidelines in ${state}.`,
-      duration && `Preferred duration: ${duration}.`,
-      safeExclude.length > 0 && `Avoid recommending these: ${safeExclude.join(', ')}.`,
-      `\n⚠️ Format:\nEach curriculum must be on its own line in this format:\nName | Subject | Description | Link | Tags | Cost | Justification | Duration`,
-      `\n⚠️ No bullet points. No markdown. No commentary. Only 3 lines. Use "|" as the only separator.`,
-    ];
+// ✨ Construct prompt parts cleanly
+const promptParts = [
+  "You are a homeschool curriculum advisor with knowledge of state education standards.",
+  `Recommend exactly 3 curriculum options for a ${gradeLevel} student.`,
+  learningStyle && `Preferred learning style: ${learningStyle}.`,
+  subject && `Focus on subject: ${subject}.`,
+  alignToState && state && `
+    Each recommendation must align with the homeschool guidelines for ${state}, 
+    and include the specific matching standard code(s) and a 1–2 sentence justification.
+    Only include recommendations that clearly align with official standards from ${state}'s department of education.
+  `,
+  duration && `Preferred duration: ${duration}.`,
+  safeExclude.length > 0 && `Avoid recommending these: ${safeExclude.join(', ')}.`,
+  "\n⚠️ Format:\nEach curriculum must be on its own line in this format:\nName | Subject | Description | Link | Tags | Cost | Justification | Duration",
+  "\n⚠️ No bullet points. No markdown. No commentary. Only 3 lines. Use '|' as the only separator.",
+];
 
-    const prompt = promptParts.filter(Boolean).join('\n');
+const prompt = promptParts.filter(Boolean).join('\n');
+
 
     // 🔐 Make API call to OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

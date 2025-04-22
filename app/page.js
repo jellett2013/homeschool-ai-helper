@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef, memo } from 'react';
+import Link from 'next/link';
 
 const ensureURL = (u) => /^https?:\/\//i.test(u) ? u : `https://${u}`;
 const linkify = (txt) =>
@@ -42,83 +43,137 @@ const Spinner = () => (
   <div className="h-6 w-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
 );
 
-const Card = memo(({ rec, inPlan, addToPlan, align, stateSel }) => (
-  <div className="relative p-6 bg-white border rounded-xl shadow-md transition hover:shadow-lg animate-fade-in">
-    {align && stateSel && (
-      <div className="absolute top-2 right-2 bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full shadow-sm">
-        ✅ State‑Aligned
-      </div>
-    )}
+const Card = memo(({ rec, inPlan, addToPlan, align, stateSel }) => {
+  const [showJustification, setShowJustification] = useState(false);
+  const justificationRef = useRef(null);
 
-    <h3 className="text-xl font-semibold text-blue-800 mb-1">{rec.name}</h3>
-    <p className="text-sm text-gray-600 font-medium mb-2">{rec.subject}</p>
-    <div className="text-sm text-gray-800 mb-2">{linkify(rec.description)}</div>
+  // Close tooltip if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        justificationRef.current &&
+        !justificationRef.current.contains(event.target)
+      ) {
+        setShowJustification(false);
+      }
+    };
 
-    <div className="grid grid-cols-2 gap-2 mb-2">
-      {rec.tags.map(
-        (t) =>
-          t && (
-            <span
-              key={t}
-              className={`text-xs px-2 py-1 rounded-full font-medium text-center ${tagColors[t] || 'bg-yellow-100 text-yellow-800'}`}
+    if (showJustification) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [showJustification]);
+
+  return (
+    <div className="relative p-6 bg-white border rounded-xl shadow-md transition hover:shadow-lg animate-fade-in">
+      {align && stateSel && rec.justification && (
+        <div className="absolute top-2 right-2 z-50">
+          <div
+            className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full shadow-sm cursor-pointer hover:scale-105 transition-transform"
+            onClick={() => setShowJustification((prev) => !prev)}
+            onMouseEnter={() => setShowJustification(true)}
+            onMouseLeave={() => setShowJustification(false)}
+          >
+            ✅ State‑Aligned
+          </div>
+          {showJustification && (
+            <div
+              ref={justificationRef}
+              className="absolute top-full right-0 mt-1 w-64 bg-white text-gray-700 text-xs border border-gray-300 rounded-lg p-3 shadow-lg z-50"
             >
-              {t}
-            </span>
-          )
+              <div className="flex justify-between items-start">
+                <span className="font-semibold text-green-700">Justification</span>
+                <button
+                  onClick={() => setShowJustification(false)}
+                  className="text-gray-500 hover:text-red-500 text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="mt-2">{rec.justification}</p>
+            </div>
+          )}
+        </div>
       )}
-      {rec.cost && (
-        <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-800 font-medium text-center">
-          💲 {rec.cost}
-        </span>
-      )}
-      {rec.duration && (
-        <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-800 font-medium text-center">
-          ⏳ {rec.duration}
-        </span>
-      )}
-    </div>
 
-    <details className="mb-3 text-sm">
-      <summary className="cursor-pointer text-indigo-600 hover:underline">Why it qualifies?</summary>
-      <p className="mt-1 text-gray-700">{rec.justification}</p>
-    </details>
+      <h3 className="text-xl font-semibold text-blue-800 mb-1">{rec.name}</h3>
+      <p className="text-sm text-gray-600 font-medium mb-2">{rec.subject}</p>
+      <div className="text-sm text-gray-800 mb-2">{linkify(rec.description)}</div>
 
-    <div className="flex justify-between items-center">
-    <a
-  href={rec.link}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="text-sm bg-gray-100 text-blue-800 px-3 py-1 rounded-lg hover:bg-gray-200 transition"
->
-  🌐 Visit Site
-</a>
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        {rec.tags.map(
+          (t) =>
+            t && (
+              <span
+                key={t}
+                className={`text-xs px-2 py-1 rounded-full font-medium text-center ${
+                  tagColors[t] || 'bg-yellow-100 text-yellow-800'
+                }`}
+              >
+                {t}
+              </span>
+            )
+        )}
+        {rec.cost && (
+          <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-800 font-medium text-center">
+            💲 {rec.cost}
+          </span>
+        )}
+        {rec.duration && (
+          <span className="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-800 font-medium text-center">
+            ⏳ {rec.duration}
+          </span>
+        )}
+      </div>
 
-      {inPlan ? (
-        <button
-          disabled
-          className="text-sm bg-green-200 text-green-900 px-3 py-1 rounded-lg"
+      <div className="flex justify-between items-center">
+        <a
+          href={rec.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm bg-gray-100 text-blue-800 px-3 py-1 rounded-lg hover:bg-gray-200 transition"
         >
-          ✓ Added
-        </button>
-      ) : (
-        <button
-          onClick={() => addToPlan(rec)}
-          className="text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition"
-        >
-          ➕ Add to My Plan
-        </button>
-      )}
+          🌐 Visit Site
+        </a>
+
+        {inPlan ? (
+          <button
+            disabled
+            className="text-sm bg-green-200 text-green-900 px-3 py-1 rounded-lg"
+          >
+            ✓ Added
+          </button>
+        ) : (
+          <button
+            onClick={() => addToPlan(rec)}
+            className="text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition"
+          >
+            ➕ Add to My Plan
+          </button>
+        )}
+      </div>
     </div>
-  </div>
-));
+  );
+});
 
 
-const Sidebar = memo(({ plan, togglePurchased, removeItem, planRef, mounted }) => {
+
+
+
+// 🧠 Update the Sidebar component
+const Sidebar = memo(({ plan, toggleScheduled, removeItem, planRef, mounted }) => {
   const grouped = plan.reduce((a, it) => {
     (a[it.subject || 'Other'] ??= []).push(it);
     return a;
   }, {});
   const subjects = Object.keys(grouped).sort();
+  
+  
   return (
     <aside ref={planRef} className="bg-white p-4 rounded-xl shadow-md border max-h-[90vh] overflow-auto w-full">
       <h2 className="text-xl font-bold mb-4 text-blue-700">📒 My Plan</h2>
@@ -131,29 +186,49 @@ const Sidebar = memo(({ plan, togglePurchased, removeItem, planRef, mounted }) =
             <ul className="space-y-3">
               {grouped[s].map((p) => (
                 <li key={p.name} className="relative border p-4 rounded-lg">
-<a
-  href={p.link}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="font-medium text-blue-700 hover:underline block"
->
-  {p.name}
-</a>
+                  <a
+                    href={p.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-blue-700 hover:underline"
+                  >
+                    {p.name}
+                  </a>
                   <div className="text-xs mt-1 flex flex-wrap gap-2">
-                    {p.cost && <span className="px-2 py-0.5 rounded-full bg-gray-200 text-gray-800">{p.cost}</span>}
-                    {p.duration && <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">{p.duration}</span>}
+                    {p.cost && (
+                      <span className="px-2 py-0.5 rounded-full bg-gray-200 text-gray-800">{p.cost}</span>
+                    )}
+                    {p.duration && (
+                      <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">{p.duration}</span>
+                    )}
                   </div>
                   <label className="flex items-center gap-2 text-sm text-gray-700 mt-2">
-                    <input type="checkbox" checked={p.purchased} onChange={() => togglePurchased(p.name)} className="accent-blue-600" />
-                    Done
+                    <input
+                      type="checkbox"
+                      checked={p.scheduled}
+                      onChange={() => toggleScheduled(p.name)}
+                      className="accent-yellow-500"
+                    />
+                    Include in Weekly Schedule
                   </label>
-                  <button onClick={() => removeItem(p.name)} className="absolute top-2 right-2 text-xs text-red-500 hover:text-red-700">✕</button>
+                  
+                  <button
+                    onClick={() => removeItem(p.name)}
+                    className="absolute top-2 right-2 text-xs text-red-500 hover:text-red-700"
+                  >
+                    ✕
+                  </button>
                 </li>
               ))}
             </ul>
           </div>
         ))
-      )}
+      )}<Link href="/schedule">
+      <button className="w-full mt-4 py-2 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+        📅 View Weekly Schedule
+      </button>
+    </Link>
+    
     </aside>
   );
 });
@@ -175,6 +250,10 @@ export default function Home() {
   const [previousNames, setPreviousNames] = useState([]);
   const planRef = useRef(null);
 
+  // 🧠 Add this handler function inside your Home component
+const toggleScheduled = (name) =>
+  setPlan(plan.map((p) => (p.name === name ? { ...p, scheduled: !p.scheduled } : p)));
+
   useEffect(() => {
     const stored = localStorage.getItem('myPlan');
     if (stored) setPlan(JSON.parse(stored));
@@ -190,9 +269,6 @@ export default function Home() {
       setPlan([...plan, { ...rec, purchased: false }]);
     }
   };
-
-  const togglePurchased = (name) =>
-    setPlan(plan.map((p) => (p.name === name ? { ...p, purchased: !p.purchased } : p)));
 
   const removeItem = (name) => setPlan(plan.filter((p) => p.name !== name));
 
@@ -329,7 +405,13 @@ export default function Home() {
 
         <div className="lg:col-span-3">
           {/* Sidebar column */}
-          <Sidebar plan={plan} togglePurchased={togglePurchased} removeItem={removeItem} planRef={planRef} mounted={mounted} />
+          <Sidebar
+  plan={plan}
+  toggleScheduled={toggleScheduled}
+  removeItem={removeItem}
+  planRef={planRef}
+  mounted={mounted}
+/>
         </div>
       </div>
     </main>
